@@ -1,13 +1,13 @@
 Name:		rdma-core
 Version:	20.1
-Release:	5
+Release:	6
 Summary:	RDMA core userspace libraries and daemons
 License:	GPLv2 or BSD
 URL:		https://github.com/linux-rdma/rdma-core
 Source0:	https://github.com/linux-rdma/rdma-core/releases/download/v%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires:	binutils cmake gcc libudev-devel pkgconfig libnl3-devel systemd
-BuildRequires:  systemd-devel valgrind-devel pandoc python3 perl-generators make
+BuildRequires:  systemd-devel valgrind-devel python3 perl-generators make
 
 Requires:	dracut kmod systemd
 
@@ -185,5 +185,11 @@ install -m 0644 ibacm_opts.cfg %{buildroot}%{_sysconfdir}/rdma/
 %{_mandir}/*
 
 %changelog
+* Fri Oct 11 2019 jiangchuangang <jiangchuangang@huawei.com> - 20.1-6
+- Type: enhancement
+- ID: NA
+- SUG: NA
+- DESC: remove pandoc from BuildRequires
+
 * Sat Sep 21 2019 openEuler Buildteam <buildteam@openeuler.org> - 20.1-5
 - Package init
