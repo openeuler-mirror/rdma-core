@@ -1,27 +1,61 @@
-Name:		rdma-core
-Version:	20.1
-Release:	6
-Summary:	RDMA core userspace libraries and daemons
-License:	GPLv2 or BSD
-URL:		https://github.com/linux-rdma/rdma-core
-Source0:	https://github.com/linux-rdma/rdma-core/releases/download/v%{version}/%{name}-%{version}.tar.gz
+Name:           rdma-core
+Version:        28.1
+Release:        2
+Summary:        RDMA core userspace libraries and daemons
+License:        GPLv2 or BSD
+Url:            https://github.com/linux-rdma/rdma-core
+Source:         https://github.com/linux-rdma/rdma-core/releases/download/v%{version}/%{name}-%{version}.tar.gz
 
-BuildRequires:	binutils cmake gcc libudev-devel pkgconfig libnl3-devel systemd
-BuildRequires:  systemd-devel valgrind-devel python3 perl-generators make
+BuildRequires:  binutils cmake >= 2.8.11 gcc libudev-devel pkgconfig pkgconfig(libnl-3.0)
+BuildRequires:  pkgconfig(libnl-route-3.0) valgrind-devel systemd systemd-devel
+BuildRequires:  python3-devel python3-Cython python3 python3-docutils perl-generators
+BuildRequires:  ninja-build
 
-Requires:	dracut kmod systemd
+Requires:       dracut kmod systemd pciutils
 
-Provides:       rdma rdma-ndd libibverbs libcxgb3 libcxgb4 libhfi1 libi40iw libipathverbs 
-Obsoletes:      rdma rdma-ndd libibverbs libcxgb3 libcxgb4 libhfi1 libi40iw libipathverbs libehca < 1.2.2-7
-Provides:       libmlx4 libmlx5 libmthca libnes libocrdma librxe libusnic_verbs libibverbs-utils 
-Obsoletes:      libmlx4 libmlx5 libmthca libnes libocrdma librxe libusnic_verbs libibverbs-utils 
-Provides:       ibacm iwpmd libibumad librdmacm librdmacm-utils srp_daemon srptools
-Obsoletes:      ibacm iwpmd libibumad librdmacm librdmacm-utils srp_daemon srptools openib-srptools <= 0.0.6
+Provides:       ibacm infiniband-diags-compat infiniband-diags libibverbs libibverbs-utils iwpmd libibumad librdmacm librdmacm-utils srp_daemon
+Obsoletes:      ibacm infiniband-diags-compat infiniband-diags libibverbs libibverbs-utils iwpmd libibumad librdmacm librdmacm-utils srp_daemon
+
+Provides:       rdma = %{version}-%{release}
+Obsoletes:      rdma < %{version}-%{release}
+Provides:       perl(IBswcountlimits)
+Provides:       libibmad = %{version}-%{release}
+Obsoletes:      libibmad < %{version}-%{release}
+Obsoletes:      openib-diags < 1.3
+Provides:       libcxgb4 = %{version}-%{release}
+Obsoletes:      libcxgb4 < %{version}-%{release}
+Provides:       libefa = %{version}-%{release}
+Obsoletes:      libefa < %{version}-%{release}
+Provides:       libhfi1 = %{version}-%{release}
+Obsoletes:      libhfi1 < %{version}-%{release}
+Provides:       libi40iw = %{version}-%{release}
+Obsoletes:      libi40iw < %{version}-%{release}
+Provides:       libipathverbs = %{version}-%{release}
+Obsoletes:      libipathverbs < %{version}-%{release}
+Provides:       libmlx4 = %{version}-%{release}
+Obsoletes:      libmlx4 < %{version}-%{release}
+Provides:       libmlx5 = %{version}-%{release}
+Obsoletes:      libmlx5 < %{version}-%{release}
+Provides:       libmthca = %{version}-%{release}
+Obsoletes:      libmthca < %{version}-%{release}
+Provides:       libocrdma = %{version}-%{release}
+Obsoletes:      libocrdma < %{version}-%{release}
+Provides:       librxe = %{version}-%{release}
+Obsoletes:      librxe < %{version}-%{release}
+Obsoletes:      srptools <= 1.0.3
+Provides:       srptools = %{version}-%{release}
+Obsoletes:      openib-srptools <= 0.0.6
+
+Conflicts:      infiniband-diags <= 1.6.7
 
 %{?systemd_requires}
 
+%define CMAKE_FLAGS -GNinja
+%define make_jobs ninja-build -v %{?_smp_mflags}
+%define cmake_install DESTDIR=%{buildroot} ninja-build install
+
 %description
-This is the userspace components for the Linux Kernel's drivers/infiniband subsystem. 
+This is the userspace components for the Linux Kernel's drivers/infiniband subsystem.
 Specifically this contains the userspace libraries for the following device nodes:
 
   - /dev/infiniband/uverbsX (libibverbs)
@@ -29,33 +63,53 @@ Specifically this contains the userspace libraries for the following device node
   - /dev/infiniband/umadX (libibumad)
 
 %package        devel
-Summary:        header files for rdma-core
-Requires:       %{name} = %{version}-%{release}  
-Provides:       libibverbs-devel libibverbs-devel-static libibumad-devel libibumad-static              
-Obsoletes:      libibverbs-devel libibverbs-devel-static libibumad-devel libibumad-static 
-Provides:       librdmacm-devel librdmacm-static ibacm-devel libcxgb3-static libcxgb4-static  
-Obsoletes:      librdmacm-devel librdmacm-static ibacm-devel libcxgb3-static libcxgb4-static
-Provides:       libhfi1-static libipathverbs-static libmlx4-static libmlx5-static libnes-static
-Obsoletes:      libhfi1-static libipathverbs-static libmlx4-static libmlx5-static libnes-static
-Provides:       libocrdma-static libi40iw-devel-static libmthca-static
-Obsoletes:      libocrdma-static libi40iw-devel-static libmthca-static libibcm-devel 
+Summary:        RDMA core development libraries and headers
+Requires:       %{name} = %{version}-%{release}
+Provides:       libibverbs-devel = %{version}-%{release}
+Obsoletes:      libibverbs-devel < %{version}-%{release}
+Provides:       libibumad-devel = %{version}-%{release}
+Obsoletes:      libibumad-devel < %{version}-%{release}
+Provides:       librdmacm-devel = %{version}-%{release}
+Obsoletes:      librdmacm-devel < %{version}-%{release}
+Provides:       ibacm-devel = %{version}-%{release}
+Obsoletes:      ibacm-devel < %{version}-%{release}
+Provides:       infiniband-diags-devel = %{version}-%{release}
+Obsoletes:      infiniband-diags-devel < %{version}-%{release}
+Provides:       libibmad-devel = %{version}-%{release}
+Obsoletes:      libibmad-devel < %{version}-%{release}
+
+BuildRequires:  pkgconfig(libnl-3.0) pkgconfig(libnl-route-3.0)
 
 %description    devel
-Header files for rdma-core.
+RDMA core development libraries and headers.
 
-%package_help
+%package -n python3-pyverbs
+Summary: Python3 API over IB verbs
+%{?python_provide:%python_provide python3-pyverbs}
+
+%description -n python3-pyverbs
+Pyverbs is a Cython-based Python API over libibverbs, providing an
+easy, object-oriented access to IB verbs.
+
+%package help
+Summary: Documents for %{name}
+Buildarch: noarch
+Requires: man info
+Provides: infiniband-diags-help = %{version}-%{release}
+Obsoletes: infiniband-diags-help < %{version}-%{release}
+
+%description help
+Man pages and other related documents for %{name}.
 
 %prep
-%autosetup -n %{name}-%{version} -p1
+%setup
+%autosetup -v -p1
 
 %build
 %if 0%{?_rundir:1}
 %else
 %define _rundir /var/run
 %endif
-
-%define make_jobs make -v %{?_smp_mflags}
-%define cmake_install DESTDIR=%{buildroot} make install
 
 %{!?EXTRA_CMAKE_FLAGS: %define EXTRA_CMAKE_FLAGS %{nil}}
 
@@ -76,54 +130,57 @@ Header files for rdma-core.
          -DCMAKE_INSTALL_RUNDIR:PATH=%{_rundir} \
          -DCMAKE_INSTALL_DOCDIR:PATH=%{_docdir}/%{name}-%{version} \
          -DCMAKE_INSTALL_UDEV_RULESDIR:PATH=%{_udevrulesdir} \
+         -DCMAKE_INSTALL_PERLDIR:PATH=%{perl_vendorlib} \
+         -DENABLE_IBDIAGS_COMPAT:BOOL=True \
+         -DENABLE_STATIC=1 \
          %{EXTRA_CMAKE_FLAGS} \
-         .
+         -DPYTHON_EXECUTABLE:PATH=%{__python3} \
+         -DCMAKE_INSTALL_PYTHON_ARCH_LIB:PATH=%{python3_sitearch} \
+         -DNO_PYVERBS=0
 %make_jobs
 
 %install
 %cmake_install
 
+mkdir -p %{buildroot}/%{_sysconfdir}/rdma
+
 %global dracutlibdir %{_prefix}/lib/dracut
 %global sysmodprobedir %{_prefix}/lib/modprobe.d
-
-pushd redhat/
-install -m 0644 rdma.conf %{buildroot}/%{_sysconfdir}/rdma/rdma.conf
-install -m 0644 rdma.sriov-vfs %{buildroot}/%{_sysconfdir}/rdma/sriov-vfs
-install -m 0644 rdma.mlx4.conf %{buildroot}/%{_sysconfdir}/rdma/mlx4.conf
-
-install -m 0755 -d %{buildroot}%{sysmodprobedir}
-install -m 0644 rdma.mlx4.sys.modprobe %{buildroot}/%{sysmodprobedir}/libmlx4.conf
-
-install -m 0755 -d %{buildroot}%{_libexecdir}
-install -m 0755 rdma.mlx4-setup.sh %{buildroot}/%{_libexecdir}/mlx4-setup.sh
-
-install -m 0755 -d %{buildroot}%{_unitdir}
-install -m 0644 rdma.service %{buildroot}%{_unitdir}/rdma.service
-
-install -m 0755 -d %{buildroot}%{dracutlibdir}/modules.d/05rdma
-install -m 0755 rdma.modules-setup.sh %{buildroot}%{dracutlibdir}/modules.d/05rdma/module-setup.sh
-
-install -m 0755 -d %{buildroot}%{_udevrulesdir}
-install -m 0644 rdma.udev-rules %{buildroot}%{_udevrulesdir}/98-rdma.rules
-
-install -m 0755 -d %{buildroot}%{_libexecdir}
-install -m 0755 rdma.kernel-init %{buildroot}%{_libexecdir}/rdma-init-kernel
-install -m 0755 rdma.sriov-init %{buildroot}%{_libexecdir}/rdma-set-sriov-vf
-popd
+mkdir -p %{buildroot}%{_sysconfdir}/udev/rules.d
+mkdir -p %{buildroot}%{_libexecdir}
+mkdir -p %{buildroot}%{_udevrulesdir}
+mkdir -p %{buildroot}%{dracutlibdir}/modules.d/05rdma
+mkdir -p %{buildroot}%{sysmodprobedir}
+install -D -m 0644 redhat/rdma.conf %{buildroot}/%{_sysconfdir}/rdma/rdma.conf
+install -D -m 0644 redhat/rdma.sriov-vfs %{buildroot}/%{_sysconfdir}/rdma/sriov-vfs
+install -D -m 0644 redhat/rdma.mlx4.conf %{buildroot}/%{_sysconfdir}/rdma/mlx4.conf
+install -D -m 0644 redhat/rdma.service %{buildroot}%{_unitdir}/rdma.service
+install -D -m 0755 redhat/rdma.modules-setup.sh %{buildroot}%{dracutlibdir}/modules.d/05rdma/module-setup.sh
+install -D -m 0644 redhat/rdma.udev-rules %{buildroot}%{_udevrulesdir}/98-rdma.rules
+install -D -m 0644 redhat/rdma.mlx4.sys.modprobe %{buildroot}%{sysmodprobedir}/libmlx4.conf
+install -D -m 0755 redhat/rdma.kernel-init %{buildroot}%{_libexecdir}/rdma-init-kernel
+install -D -m 0755 redhat/rdma.sriov-init %{buildroot}%{_libexecdir}/rdma-set-sriov-vf
+install -D -m 0755 redhat/rdma.mlx4-setup.sh %{buildroot}%{_libexecdir}/mlx4-setup.sh
 
 bin/ib_acme -D . -O
-install -m 0644 ibacm_opts.cfg %{buildroot}%{_sysconfdir}/rdma/
+install -D -m 0644 ibacm_opts.cfg %{buildroot}%{_sysconfdir}/rdma/
 
-%ldconfig_scriptlets 
+rm -rf %{buildroot}/%{_initrddir}/
+rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
+
+%ldconfig_scriptlets
 
 %post
+/sbin/udevadm trigger --subsystem-match=infiniband --action=change || true
+/sbin/udevadm trigger --subsystem-match=net --action=change || true
+/sbin/udevadm trigger --subsystem-match=infiniband_mad --action=change || true
 %systemd_post ibacm.service
 %systemd_post srp_daemon.service
 %systemd_post iwpmd.service
 
 %preun
 %systemd_preun ibacm.service
-%systemd_preun srp_daemon.service	
+%systemd_preun srp_daemon.service
 %systemd_preun iwpmd.service
 
 %postun
@@ -134,44 +191,56 @@ install -m 0644 ibacm_opts.cfg %{buildroot}%{_sysconfdir}/rdma/
 %files
 %defattr(-,root,root)
 %license COPYING.*
-%{sysmodprobedir}/libmlx4.conf
-%config(noreplace) %{_sysconfdir}/*.conf
 %config(noreplace) %{_sysconfdir}/rdma/*.conf
-%config(noreplace) %{_sysconfdir}/udev/rules.d/*
-%config(noreplace) %{_sysconfdir}/rdma/sriov-vfs
-%config(noreplace) %{_sysconfdir}/rdma/ibacm_opts.cfg
 %config(noreplace) %{_sysconfdir}/rdma/modules/*.conf
+%config(noreplace) %{_sysconfdir}/rdma/sriov-vfs
+%config(noreplace) %{_sysconfdir}/udev/rules.d/*
 %config(noreplace) %{_sysconfdir}/modprobe.d/*.conf
+%config(noreplace) %{_sysconfdir}/infiniband-diags/*
 %config(noreplace) %{_sysconfdir}/libibverbs.d/*.driver
-%{_libexecdir}/mlx4-setup.sh
+%config(noreplace) %{_sysconfdir}/rdma/ibacm_opts.cfg
+%config(noreplace) %{_sysconfdir}/iwpmd.conf
+%config(noreplace) %{_sysconfdir}/srp_daemon.conf
 %{dracutlibdir}/modules.d/05rdma/module-setup.sh
+%{_udevrulesdir}/../rdma_rename
+%{_udevrulesdir}/*.rules
+%{sysmodprobedir}/libmlx4.conf
+%{perl_vendorlib}/IBswcountlimits.pm
+%{_libexecdir}/rdma-init-kernel
+%{_libexecdir}/rdma-set-sriov-vf
+%{_libexecdir}/mlx4-setup.sh
+%{_libexecdir}/truescale-serdes.cmds
+%{_libexecdir}/srp_daemon/start_on_all_ports
 %{_sbindir}/*
 %{_bindir}/*
 %{_unitdir}/*
-%{_udevrulesdir}/*.rules
-%{_libexecdir}/rdma-init-kernel
-%{_libexecdir}/rdma-set-sriov-vf
-%{_libexecdir}/truescale-serdes.cmds
-%{_libexecdir}/srp_daemon/start_on_all_ports
-%{_libdir}/ibacm/*
-%{_libdir}/libmlx4.so.*
-%{_libdir}/libmlx5.so.*
+%{_libdir}/libibmad*.so.*
+%{_libdir}/libibnetdisc*.so.*
+%{_libdir}/libefa.so.*
 %{_libdir}/libibverbs*.so.*
 %{_libdir}/libibverbs/*.so
+%{_libdir}/libmlx5.so.*
+%{_libdir}/libmlx4.so.*
+%{_libdir}/ibacm/*
 %{_libdir}/libibumad*.so.*
 %{_libdir}/librdmacm*.so.*
 %{_libdir}/rsocket/*.so*
-%exclude %{_initrddir}/*
-%exclude %{_sbindir}/srp_daemon.sh
 
-%files       devel
+
+%files devel
 %defattr(-,root,root)
+%{_includedir}/infiniband/*
+%{_includedir}/rdma/*
+%{_libdir}/lib*.a
 %{_libdir}/lib*.so
 %{_libdir}/pkgconfig/*.pc
-%{_includedir}/rdma/*
-%{_includedir}/infiniband/*
 
-%files       help
+%files -n python3-pyverbs
+%defattr(-,root,root)
+%{python3_sitearch}/pyverbs
+%{_docdir}/%{name}-%{version}/tests/*.py
+
+%files help
 %defattr(-,root,root)
 %doc %{_docdir}/%{name}-%{version}/rxe.md
 %doc %{_docdir}/%{name}-%{version}/udev.md
@@ -185,6 +254,24 @@ install -m 0644 ibacm_opts.cfg %{buildroot}%{_sysconfdir}/rdma/
 %{_mandir}/*
 
 %changelog
+* Mon Apr 20 2020 majun <majun65@huawei.com> - 28.1-2
+- Type: bugfix
+- ID: NA
+- SUG: NA
+- DESC: fix install problem
+
+* Sat Apr 18 2020 majun <majun65@huawei.com> - 28.1-1
+- Type: bugfix
+- ID: NA
+- SUG: NA
+- DESC: update to 28.1
+
+* Thu Mar 19 2020 wangxiaopeng <wangxiaopeng7@huawei.com> - 20.1-7
+- Type: bugfix
+- ID: NA
+- SUG: NA
+- DESC: fix upgrate problem
+
 * Fri Oct 11 2019 jiangchuangang <jiangchuangang@huawei.com> - 20.1-6
 - Type: enhancement
 - ID: NA
@@ -193,3 +280,4 @@ install -m 0644 ibacm_opts.cfg %{buildroot}%{_sysconfdir}/rdma/
 
 * Sat Sep 21 2019 openEuler Buildteam <buildteam@openeuler.org> - 20.1-5
 - Package init
+
