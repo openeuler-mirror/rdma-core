@@ -1,6 +1,6 @@
 Name:           rdma-core
 Version:        28.1
-Release:        2
+Release:        3
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
@@ -254,6 +254,12 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %{_mandir}/*
 
 %changelog
+* Fri Aug 21 2020 yuboyun <yuboyun@huawei.com> - 28.1-3
+- Type: bugfix
+- ID: NA
+- SUG: NA
+- DESC: release +1 for rebuild
+
 * Mon Apr 20 2020 majun <majun65@huawei.com> - 28.1-2
 - Type: bugfix
 - ID: NA
