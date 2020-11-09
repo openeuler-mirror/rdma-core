@@ -1,6 +1,6 @@
 Name:           rdma-core
 Version:        28.1
-Release:        3
+Release:        4
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
@@ -11,7 +11,7 @@ BuildRequires:  pkgconfig(libnl-route-3.0) valgrind-devel systemd systemd-devel
 BuildRequires:  python3-devel python3-Cython python3 python3-docutils perl-generators
 BuildRequires:  ninja-build
 
-Requires:       dracut kmod systemd pciutils
+Requires:       dracut kmod systemd pciutils %{name}-help
 
 Provides:       ibacm infiniband-diags-compat infiniband-diags libibverbs libibverbs-utils iwpmd libibumad librdmacm librdmacm-utils srp_daemon
 Obsoletes:      ibacm infiniband-diags-compat infiniband-diags libibverbs libibverbs-utils iwpmd libibumad librdmacm librdmacm-utils srp_daemon
@@ -254,6 +254,12 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %{_mandir}/*
 
 %changelog
+* Mon Nov 09 2020 xihaochen<xihaochen@huawei.com> - 28.1-4
+- Type: requirement
+- CVE: NA
+- SUG: NA
+- DESC: add rdma-core-help dependency for rdma-core
+
 * Fri Aug 21 2020 yuboyun <yuboyun@huawei.com> - 28.1-3
 - Type: bugfix
 - ID: NA
