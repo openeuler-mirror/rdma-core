@@ -1,0 +1,74 @@
+From fd16670c5f4c46906e01dc343839613c51cc8847 Mon Sep 17 00:00:00 2001
+From: kircher <majun65@huawei.com>
+Date: Thu, 18 Mar 2021 10:48:18 +0800
+Subject: [PATCH] remove boot errot
+
+---
+ redhat/rdma.kernel-init | 45 +++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 37 insertions(+), 8 deletions(-)
+
+diff --git a/redhat/rdma.kernel-init b/redhat/rdma.kernel-init
+index c7444a1..8e726a4 100644
+--- a/redhat/rdma.kernel-init
++++ b/redhat/rdma.kernel-init
+@@ -210,20 +210,49 @@ errata_56()
+ }
+ 
+ 
+-load_hardware_modules
++MSG=$(load_hardware_modules 2>&1)
+ RC=$[ $RC + $? ]
+-load_modules $LOAD_CORE_MODULES
++if [ -n "$MSG" ];then
++	echo "WARNING: $MSG"
++fi
++
++MSG=$(load_modules $LOAD_CORE_MODULES)
+ RC=$[ $RC + $? ]
+-load_modules $LOAD_CORE_CM_MODULES
++if [ -n "$MSG" ];then
++	echo "WARNING: $MSG"
++fi
++
++MSG=$(load_modules $LOAD_CORE_CM_MODULES)
+ RC=$[ $RC + $? ]
+-load_modules $LOAD_CORE_USER_MODULES
++if [ -n "$MSG" ];then
++	echo "WARNING: $MSG"
++fi
++
++MSG=$(load_modules $LOAD_CORE_USER_MODULES)
+ RC=$[ $RC + $? ]
+-load_modules $LOAD_ULP_MODULES
++if [ -n "$MSG" ];then
++	echo "WARNING: $MSG"
++fi
++
++MSG=$(load_modules $LOAD_ULP_MODULES)
+ RC=$[ $RC + $? ]
++if [ -n "$MSG" ];then
++	echo "WARNING: $MSG"
++fi
++
++MSG=$(errata_58)
++if [ -n "$MSG" ];then
++        echo "WARNING: $MSG"
++fi
+ 
+-errata_58
+-errata_56
++MSG=$(errata_56)
++if [ -n "$MSG" ];then
++        echo "WARNING: $MSG"
++fi
+ 
+-/usr/libexec/rdma-set-sriov-vf
++MSG=$(/usr/libexec/rdma-set-sriov-vf)
++if [ -n "$MSG" ];then
++        echo "WARNING: $MSG"
++fi
+ 
+ exit $RC
+-- 
+1.8.3.1
+

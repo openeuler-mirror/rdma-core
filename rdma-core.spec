@@ -1,6 +1,6 @@
 Name:           rdma-core
 Version:        28.1
-Release:        2
+Release:        3
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
@@ -47,6 +47,8 @@ Provides:       srptools = %{version}-%{release}
 Obsoletes:      openib-srptools <= 0.0.6
 
 Conflicts:      infiniband-diags <= 1.6.7
+
+Patch9001:	bugfix-remove-error-msg-when-boot-rdma.patch
 
 %{?systemd_requires}
 
@@ -254,6 +256,12 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %{_mandir}/*
 
 %changelog
+* Sat Mar 13 2020 majun <majun65@huawei.com> - 28.1-3
+- Type: bugfix
+- ID: NA
+- SUG: NA
+- DESC: remove boot error
+
 * Mon Apr 20 2020 majun <majun65@huawei.com> - 28.1-2
 - Type: bugfix
 - ID: NA
