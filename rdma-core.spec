@@ -1,6 +1,6 @@
 Name:           rdma-core
-Version:        28.1
-Release:        4
+Version:        35.0
+Release:        1
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
@@ -151,16 +151,12 @@ mkdir -p %{buildroot}%{_libexecdir}
 mkdir -p %{buildroot}%{_udevrulesdir}
 mkdir -p %{buildroot}%{dracutlibdir}/modules.d/05rdma
 mkdir -p %{buildroot}%{sysmodprobedir}
-install -D -m 0644 redhat/rdma.conf %{buildroot}/%{_sysconfdir}/rdma/rdma.conf
-install -D -m 0644 redhat/rdma.sriov-vfs %{buildroot}/%{_sysconfdir}/rdma/sriov-vfs
 install -D -m 0644 redhat/rdma.mlx4.conf %{buildroot}/%{_sysconfdir}/rdma/mlx4.conf
-install -D -m 0644 redhat/rdma.service %{buildroot}%{_unitdir}/rdma.service
 install -D -m 0755 redhat/rdma.modules-setup.sh %{buildroot}%{dracutlibdir}/modules.d/05rdma/module-setup.sh
-install -D -m 0644 redhat/rdma.udev-rules %{buildroot}%{_udevrulesdir}/98-rdma.rules
 install -D -m 0644 redhat/rdma.mlx4.sys.modprobe %{buildroot}%{sysmodprobedir}/libmlx4.conf
-install -D -m 0755 redhat/rdma.kernel-init %{buildroot}%{_libexecdir}/rdma-init-kernel
-install -D -m 0755 redhat/rdma.sriov-init %{buildroot}%{_libexecdir}/rdma-set-sriov-vf
 install -D -m 0755 redhat/rdma.mlx4-setup.sh %{buildroot}%{_libexecdir}/mlx4-setup.sh
+rm -f %{buildroot}%{_sysconfdir}/rdma/modules/rdma.conf
+install -D -m0644 redhat/rdma.conf %{buildroot}%{_sysconfdir}/rdma/modules/rdma.conf
 
 bin/ib_acme -D . -O
 install -D -m 0644 ibacm_opts.cfg %{buildroot}%{_sysconfdir}/rdma/
@@ -193,7 +189,6 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %license COPYING.*
 %config(noreplace) %{_sysconfdir}/rdma/*.conf
 %config(noreplace) %{_sysconfdir}/rdma/modules/*.conf
-%config(noreplace) %{_sysconfdir}/rdma/sriov-vfs
 %config(noreplace) %{_sysconfdir}/udev/rules.d/*
 %config(noreplace) %{_sysconfdir}/modprobe.d/*.conf
 %config(noreplace) %{_sysconfdir}/infiniband-diags/*
@@ -206,8 +201,6 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %{_udevrulesdir}/*.rules
 %{sysmodprobedir}/libmlx4.conf
 %{perl_vendorlib}/IBswcountlimits.pm
-%{_libexecdir}/rdma-init-kernel
-%{_libexecdir}/rdma-set-sriov-vf
 %{_libexecdir}/mlx4-setup.sh
 %{_libexecdir}/truescale-serdes.cmds
 %{_libexecdir}/srp_daemon/start_on_all_ports
@@ -254,6 +247,9 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %{_mandir}/*
 
 %changelog
+* Fri Aug 30 2021 liyangyang <liyangyang20@huawei.com> - 35.0-1
+- DESC: Currently 28.1 is not commercially available and need to be modified to 35.0 with more complete features
+
 * Mon Nov 09 2020 xihaochen<xihaochen@huawei.com> - 28.1-4
 - Type: requirement
 - CVE: NA
