@@ -1,6 +1,6 @@
 Name:           rdma-core
 Version:        35.0
-Release:        1
+Release:        2
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
@@ -47,6 +47,8 @@ Provides:       srptools = %{version}-%{release}
 Obsoletes:      openib-srptools <= 0.0.6
 
 Conflicts:      infiniband-diags <= 1.6.7
+
+Patch9002:  fixbug-increase-maximum-number-of-cpus-rdma.patch
 
 %{?systemd_requires}
 
@@ -247,6 +249,12 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %{_mandir}/*
 
 %changelog
+* Thu Sep 23 2021 zhongxuan <zhongxuan2@huawei.com> - 35.0-2
+- Type: bugfix
+- ID: NA
+- SUG: NA
+- DESC: increase maximum number of cpus
+
 * Fri Jul 2 2021 liyangyang <liyangyang20@huawei.com> - 35.0-1
 - Type: bugfix
 - ID: NA
