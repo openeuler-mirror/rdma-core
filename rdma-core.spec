@@ -1,6 +1,6 @@
 Name:           rdma-core
 Version:        35.0
-Release:        2
+Release:        3
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
@@ -48,7 +48,8 @@ Obsoletes:      openib-srptools <= 0.0.6
 
 Conflicts:      infiniband-diags <= 1.6.7
 
-Patch9002:  fixbug-increase-maximum-number-of-cpus-rdma.patch
+Patch001:       fixbug-increase-maximum-number-of-cpus-rdma.patch
+Patch002:       use-e-para-to-make-transferred-meaning-take-effect.patch
 
 %{?systemd_requires}
 
@@ -249,6 +250,12 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %{_mandir}/*
 
 %changelog
+* Thu Sep 26 2021 seuzw <930zhaowei@163.com> - 35.0-3
+- Type: bugfix
+- ID: NA
+- SUG: NA
+- DESC: Use -e para to make transferred meaning take effect
+
 * Thu Sep 23 2021 zhongxuan <zhongxuan2@huawei.com> - 35.0-2
 - Type: bugfix
 - ID: NA
