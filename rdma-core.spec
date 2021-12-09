@@ -1,17 +1,18 @@
 Name:           rdma-core
-Version:        35.0
-Release:        3
+Version:        35.1
+Release:        1
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
 Source:         https://github.com/linux-rdma/rdma-core/releases/download/v%{version}/%{name}-%{version}.tar.gz
+Patch0:         backport-fixbug-increase-maximum-number-of-cpus-rdma.patch
 
 BuildRequires:  binutils cmake >= 2.8.11 gcc libudev-devel pkgconfig pkgconfig(libnl-3.0)
 BuildRequires:  pkgconfig(libnl-route-3.0) valgrind-devel systemd systemd-devel
 BuildRequires:  python3-devel python3-Cython python3 python3-docutils perl-generators
 BuildRequires:  ninja-build
 
-Requires:       dracut kmod systemd pciutils
+Requires:       systemd pciutils
 
 Provides:       ibacm infiniband-diags-compat infiniband-diags libibverbs libibverbs-utils iwpmd libibumad librdmacm librdmacm-utils srp_daemon
 Obsoletes:      ibacm infiniband-diags-compat infiniband-diags libibverbs libibverbs-utils iwpmd libibumad librdmacm librdmacm-utils srp_daemon
@@ -47,9 +48,6 @@ Provides:       srptools = %{version}-%{release}
 Obsoletes:      openib-srptools <= 0.0.6
 
 Conflicts:      infiniband-diags <= 1.6.7
-
-Patch001:       fixbug-increase-maximum-number-of-cpus-rdma.patch
-Patch002:       use-e-para-to-make-transferred-meaning-take-effect.patch
 
 %{?systemd_requires}
 
@@ -170,9 +168,11 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %ldconfig_scriptlets
 
 %post
+if [ -x /sbin/udevadm ];then
 /sbin/udevadm trigger --subsystem-match=infiniband --action=change || true
 /sbin/udevadm trigger --subsystem-match=net --action=change || true
 /sbin/udevadm trigger --subsystem-match=infiniband_mad --action=change || true
+fi
 %systemd_post ibacm.service
 %systemd_post srp_daemon.service
 %systemd_post iwpmd.service
@@ -250,6 +250,12 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %{_mandir}/*
 
 %changelog
+* Thu Dec 09 2021 gaihuiying <gaihuiying1@huawei.com> - 35.1-1
+- Type: requirement
+- ID: NA
+- SUG: NA
+- DESC: update to 35.1
+
 * Thu Sep 26 2021 seuzw <930zhaowei@163.com> - 35.0-3
 - Type: bugfix
 - ID: NA
