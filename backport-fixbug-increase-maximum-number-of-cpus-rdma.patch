@@ -1,0 +1,27 @@
+From c381cfa26ba6163b9cc51212702e64bf1d83f838 Mon Sep 17 00:00:00 2001
+From: swimlessbird <52704385+swimlessbird@users.noreply.github.com>
+Date: Fri, 17 Sep 2021 14:35:05 +0800
+Subject: [PATCH] ibdiags: Increase maximum number of CPUs
+
+In modern systems, the old limit (8) is small enough, so increase
+to something larger (256).
+
+Signed-off-by: Suwan Sun <swimlessbird@gmail.com>
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+ infiniband-diags/ibsysstat.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/infiniband-diags/ibsysstat.c b/infiniband-diags/ibsysstat.c
+index 6ff7ca0c4..73972d039 100644
+--- a/infiniband-diags/ibsysstat.c
++++ b/infiniband-diags/ibsysstat.c
+@@ -41,7 +41,7 @@
+ 
+ #include "ibdiag_common.h"
+ 
+-#define MAX_CPUS 8
++#define MAX_CPUS 256
+ 
+ static struct ibmad_port *srcport;
+ 
