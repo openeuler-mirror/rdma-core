@@ -1,11 +1,12 @@
 Name:           rdma-core
 Version:        35.1
-Release:        1
+Release:        2
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
 Source:         https://github.com/linux-rdma/rdma-core/releases/download/v%{version}/%{name}-%{version}.tar.gz
 Patch0:         backport-fixbug-increase-maximum-number-of-cpus-rdma.patch
+Patch1:         riscv-barriers.patch
 
 BuildRequires:  binutils cmake >= 2.8.11 gcc libudev-devel pkgconfig pkgconfig(libnl-3.0)
 BuildRequires:  pkgconfig(libnl-route-3.0) valgrind-devel systemd systemd-devel
@@ -250,6 +251,12 @@ fi
 %{_mandir}/*
 
 %changelog
+* Tue Dec 28 2021 lvxiaoqian <xiaoqian@nj.iscas.ac.cn> - 35.1-2
+- Type: requirement
+- ID: NA
+- SUG: NA
+- DESC: add riscv patch, patch url:http://fedora.riscv.rocks/koji/buildinfo?buildID=87543
+
 * Thu Dec 09 2021 gaihuiying <gaihuiying1@huawei.com> - 35.1-1
 - Type: requirement
 - ID: NA
