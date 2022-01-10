@@ -1,11 +1,20 @@
 Name:           rdma-core
 Version:        35.1
-Release:        1
+Release:        2
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
 Source:         https://github.com/linux-rdma/rdma-core/releases/download/v%{version}/%{name}-%{version}.tar.gz
+
 Patch0:         backport-fixbug-increase-maximum-number-of-cpus-rdma.patch
+Patch1:         0001-Update-kernel-headers.patch
+Patch2:         0002-libhns-Fix-the-ownership-of-the-head-tail-pointer-of.patch
+Patch3:         0003-libhns-Fix-wrong-data-type-when-writing-doorbell.patch
+Patch4:         0004-libhns-Remove-unsupported-QP-type.patch
+Patch5:         0005-libhns-Avoid-using-WQE-indexes-that-exceed-the-SRQ-s.patch
+Patch6:         0006-libhns-Don-t-create-RQ-for-a-QP-that-associated-with.patch
+Patch7:         0007-libhns-Add-support-for-direct-wqe.patch
+Patch8:         0008-libhns-Use-new-SQ-doorbell-register-for-HIP09.patch
 
 BuildRequires:  binutils cmake >= 2.8.11 gcc libudev-devel pkgconfig pkgconfig(libnl-3.0)
 BuildRequires:  pkgconfig(libnl-route-3.0) valgrind-devel systemd systemd-devel
@@ -250,6 +259,12 @@ fi
 %{_mandir}/*
 
 %changelog
+* Thu Jan 10 2022 tangchengchang <tangchengchang@huawei.com> - 35.1-2
+- Type: requirement
+- ID: NA
+- SUG: NA
+- DESC: Add support for hns DWQE
+
 * Thu Dec 09 2021 gaihuiying <gaihuiying1@huawei.com> - 35.1-1
 - Type: requirement
 - ID: NA

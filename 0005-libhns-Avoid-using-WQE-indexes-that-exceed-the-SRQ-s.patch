@@ -1,0 +1,67 @@
+From e460a4208d1821b1477e621ad5a7b72068e844f9 Mon Sep 17 00:00:00 2001
+From: Wenpeng Liang <liangwenpeng@huawei.com>
+Date: Tue, 11 May 2021 19:06:32 +0800
+Subject: [PATCH 5/8] libhns: Avoid using WQE indexes that exceed the SRQ size
+
+The index of SRQ WQE got from bitmap may be greater than the capability,
+so a check for that should be added.
+
+Signed-off-by: Wenpeng Liang <liangwenpeng@huawei.com>
+Signed-off-by: Weihang Li <liweihang@huawei.com>
+---
+ providers/hns/hns_roce_u_hw_v2.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/providers/hns/hns_roce_u_hw_v2.c b/providers/hns/hns_roce_u_hw_v2.c
+index c62f74b5..1169b64b 100644
+--- a/providers/hns/hns_roce_u_hw_v2.c
++++ b/providers/hns/hns_roce_u_hw_v2.c
+@@ -1527,8 +1527,9 @@ static int hns_roce_u_v2_destroy_qp(struct ibv_qp *ibqp)
+ 	return ret;
+ }
+
+-static int find_empty_entry(struct hns_roce_idx_que *idx_que)
++static int get_wqe_idx(struct hns_roce_srq *srq, int *wqe_idx)
+ {
++	struct hns_roce_idx_que *idx_que = &srq->idx_que;
+ 	int bit_num;
+ 	int i;
+
+@@ -1536,12 +1537,20 @@ static int find_empty_entry(struct hns_roce_idx_que *idx_que)
+ 	for (i = 0; i < idx_que->bitmap_cnt && idx_que->bitmap[i] == 0; ++i)
+ 		;
+ 	if (i == idx_que->bitmap_cnt)
+-		return ENOMEM;
++		return -ENOMEM;
+
+ 	bit_num = ffsl(idx_que->bitmap[i]);
+ 	idx_que->bitmap[i] &= ~(1ULL << (bit_num - 1));
+
+-	return i * BIT_CNT_PER_LONG + (bit_num - 1);
++	*wqe_idx = i * BIT_CNT_PER_LONG + (bit_num - 1);
++
++	/* If wqe_cnt is less than BIT_CNT_PER_LONG, wqe_idx may be greater
++	 * than wqe_cnt.
++	 */
++	if (*wqe_idx >= srq->wqe_cnt)
++		return -ENOMEM;
++
++	return 0;
+ }
+
+ static int hns_roce_u_v2_post_srq_recv(struct ibv_srq *ib_srq,
+@@ -1580,9 +1589,8 @@ static int hns_roce_u_v2_post_srq_recv(struct ibv_srq *ib_srq,
+ 			break;
+ 		}
+
+-		wqe_idx = find_empty_entry(&srq->idx_que);
+-		if (wqe_idx < 0 || wqe_idx >= srq->wqe_cnt) {
+-			ret = -ENOMEM;
++		ret = get_wqe_idx(srq, &wqe_idx);
++		if (ret) {
+ 			*bad_wr = wr;
+ 			break;
+ 		}
+--
+2.33.0
+

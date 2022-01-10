@@ -1,0 +1,43 @@
+From 60d82566fc94b11280be26733bc306e6af3d2697 Mon Sep 17 00:00:00 2001
+From: Wenpeng Liang <liangwenpeng@huawei.com>
+Date: Tue, 9 Nov 2021 20:40:58 +0800
+Subject: [PATCH 4/8] libhns: Remove unsupported QP type
+
+Currently, user space does not support UC type QP.
+
+Signed-off-by: Wenpeng Liang <liangwenpeng@huawei.com>
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+ providers/hns/hns_roce_u_hw_v1.c | 1 -
+ providers/hns/hns_roce_u_hw_v2.c | 3 +--
+ 2 files changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/providers/hns/hns_roce_u_hw_v1.c b/providers/hns/hns_roce_u_hw_v1.c
+index 14ee4817..279c9b0f 100644
+--- a/providers/hns/hns_roce_u_hw_v1.c
++++ b/providers/hns/hns_roce_u_hw_v1.c
+@@ -532,7 +532,6 @@ static int hns_roce_u_v1_post_send(struct ibv_qp *ibvqp, struct ibv_send_wr *wr,
+ 			ctrl->flag |= htole32(ps_opcode);
+ 			wqe  += sizeof(struct hns_roce_wqe_raddr_seg);
+ 			break;
+-		case IBV_QPT_UC:
+ 		case IBV_QPT_UD:
+ 		default:
+ 			break;
+diff --git a/providers/hns/hns_roce_u_hw_v2.c b/providers/hns/hns_roce_u_hw_v2.c
+index efd949f4..c62f74b5 100644
+--- a/providers/hns/hns_roce_u_hw_v2.c
++++ b/providers/hns/hns_roce_u_hw_v2.c
+@@ -460,8 +460,7 @@ static int hns_roce_handle_recv_inl_wqe(struct hns_roce_v2_cqe *cqe,
+ 					struct hns_roce_qp **cur_qp,
+ 					struct ibv_wc *wc, uint32_t opcode)
+ {
+-	if (((*cur_qp)->verbs_qp.qp.qp_type == IBV_QPT_RC ||
+-	     (*cur_qp)->verbs_qp.qp.qp_type == IBV_QPT_UC) &&
++	if (((*cur_qp)->verbs_qp.qp.qp_type == IBV_QPT_RC) &&
+ 	    (opcode == HNS_ROCE_RECV_OP_SEND ||
+ 	     opcode == HNS_ROCE_RECV_OP_SEND_WITH_IMM ||
+ 	     opcode == HNS_ROCE_RECV_OP_SEND_WITH_INV) &&
+--
+2.33.0
+

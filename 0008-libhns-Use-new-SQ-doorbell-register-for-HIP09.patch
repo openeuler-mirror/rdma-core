@@ -1,0 +1,70 @@
+From 608c142e7cbac2a6c02071022fe87b081a6ddc4f Mon Sep 17 00:00:00 2001
+From: Yixing Liu <liuyixing1@huawei.com>
+Date: Tue, 21 Dec 2021 21:38:08 +0800
+Subject: [PATCH 8/8] libhns: Use new SQ doorbell register for HIP09
+
+HIP09 set a new BAR space for SQ doorbell. Each SQ doorbell has an
+independent BAR space and the size is 64KB. SQ doorbell share
+the same BAR space with direct WQE.
+
+Signed-off-by: Yixing Liu <liuyixing1@huawei.com>
+Signed-off-by: Wenpeng Liang <liangwenpeng@huawei.com>
+---
+ providers/hns/hns_roce_u.h       | 1 +
+ providers/hns/hns_roce_u_hw_v2.c | 4 ++--
+ providers/hns/hns_roce_u_verbs.c | 5 +++++
+ 3 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/providers/hns/hns_roce_u.h b/providers/hns/hns_roce_u.h
+index 37711363..460363b7 100644
+--- a/providers/hns/hns_roce_u.h
++++ b/providers/hns/hns_roce_u.h
+@@ -238,6 +238,7 @@ struct hns_roce_wq {
+ 	unsigned int			wqe_shift;
+ 	unsigned int			shift; /* wq size is 2^shift */
+ 	int				offset;
++	void				*db_reg;
+ };
+
+ /* record the result of sge process */
+diff --git a/providers/hns/hns_roce_u_hw_v2.c b/providers/hns/hns_roce_u_hw_v2.c
+index f102fd61..9cbc0aac 100644
+--- a/providers/hns/hns_roce_u_hw_v2.c
++++ b/providers/hns/hns_roce_u_hw_v2.c
+@@ -308,7 +308,7 @@ static void hns_roce_update_sq_db(struct hns_roce_context *ctx,
+
+ 	sq_db.parameter = htole32(qp->sq.head);
+ 	roce_set_field(sq_db.parameter, DB_PARAM_SL_M, DB_PARAM_SL_S, qp->sl);
+-	hns_roce_write64(ctx->uar + ROCEE_VF_DB_CFG0_OFFSET, (__le32 *)&sq_db);
++	hns_roce_write64(qp->sq.db_reg, (__le32 *)&sq_db);
+ }
+
+ static void hns_roce_write512(uint64_t *dest, uint64_t *val)
+@@ -329,7 +329,7 @@ static void hns_roce_write_dwqe(struct hns_roce_qp *qp, void *wqe)
+ 	roce_set_field(rc_sq_wqe->byte_4, RC_SQ_WQE_BYTE_4_WQE_INDEX_M,
+ 		       RC_SQ_WQE_BYTE_4_WQE_INDEX_S, qp->sq.head);
+
+-	hns_roce_write512(qp->dwqe_page, wqe);
++	hns_roce_write512(qp->sq.db_reg, wqe);
+ }
+
+ static void hns_roce_v2_update_cq_cons_index(struct hns_roce_context *ctx,
+diff --git a/providers/hns/hns_roce_u_verbs.c b/providers/hns/hns_roce_u_verbs.c
+index fc902815..c5022c83 100644
+--- a/providers/hns/hns_roce_u_verbs.c
++++ b/providers/hns/hns_roce_u_verbs.c
+@@ -1117,6 +1117,11 @@ static void qp_setup_config(struct ibv_qp_init_attr_ex *attr,
+ 	}
+
+ 	qp->max_inline_data = attr->cap.max_inline_data;
++
++	if (qp->flags & HNS_ROCE_QP_CAP_DIRECT_WQE)
++		qp->sq.db_reg = qp->dwqe_page;
++	else
++		qp->sq.db_reg = ctx->uar + ROCEE_VF_DB_CFG0_OFFSET;
+ }
+
+ void hns_roce_free_qp_buf(struct hns_roce_qp *qp, struct hns_roce_context *ctx)
+--
+2.33.0
+
