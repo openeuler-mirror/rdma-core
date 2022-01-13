@@ -1,0 +1,180 @@
+From 9cc4c4b8d31b35428859ef626d4428fc393aace4 Mon Sep 17 00:00:00 2001
+From: Lang Cheng <chenglang@huawei.com>
+Date: Thu, 11 Nov 2021 21:08:35 +0800
+Subject: [PATCH 3/8] libhns: Fix wrong data type when writing doorbell
+
+The DB data is a __le32[] value instead of uint32_t[], and the DB register
+should be written with a little-endian data instead of uint64_t.
+
+Fixes: 1523fbb1ea8e ("libhns: Add verbs of cq support")
+Signed-off-by: Lang Cheng <chenglang@huawei.com>
+Signed-off-by: Yixing Liu <liuyixing1@huawei.com>
+Signed-off-by: Wenpeng Liang <liangwenpeng@huawei.com>
+---
+ providers/hns/hns_roce_u_db.h    | 14 ++++----------
+ providers/hns/hns_roce_u_hw_v1.c | 17 +++++++++--------
+ providers/hns/hns_roce_u_hw_v2.c | 23 ++++++++++++-----------
+ 3 files changed, 25 insertions(+), 29 deletions(-)
+
+diff --git a/providers/hns/hns_roce_u_db.h b/providers/hns/hns_roce_u_db.h
+index b44e64d4..13df9b52 100644
+--- a/providers/hns/hns_roce_u_db.h
++++ b/providers/hns/hns_roce_u_db.h
+@@ -32,23 +32,17 @@
+
+ #include <linux/types.h>
+
++#include <util/mmio.h>
+ #include "hns_roce_u.h"
+
+ #ifndef _HNS_ROCE_U_DB_H
+ #define _HNS_ROCE_U_DB_H
+
+-#if __BYTE_ORDER == __LITTLE_ENDIAN
+-#define HNS_ROCE_PAIR_TO_64(val) ((uint64_t) val[1] << 32 | val[0])
+-#elif __BYTE_ORDER == __BIG_ENDIAN
+-#define HNS_ROCE_PAIR_TO_64(val) ((uint64_t) val[0] << 32 | val[1])
+-#else
+-#error __BYTE_ORDER not defined
+-#endif
++#define HNS_ROCE_WORD_NUM	2
+
+-static inline void hns_roce_write64(uint32_t val[2],
+-				    struct hns_roce_context *ctx, int offset)
++static inline void hns_roce_write64(void *dest, __le32 val[HNS_ROCE_WORD_NUM])
+ {
+-	*(volatile uint64_t *) (ctx->uar + offset) = HNS_ROCE_PAIR_TO_64(val);
++	mmio_write64_le(dest, *(__le64 *)val);
+ }
+
+ void *hns_roce_alloc_db(struct hns_roce_context *ctx,
+diff --git a/providers/hns/hns_roce_u_hw_v1.c b/providers/hns/hns_roce_u_hw_v1.c
+index 8f0a71aa..14ee4817 100644
+--- a/providers/hns/hns_roce_u_hw_v1.c
++++ b/providers/hns/hns_roce_u_hw_v1.c
+@@ -65,7 +65,7 @@ static void hns_roce_update_rq_head(struct hns_roce_context *ctx,
+
+ 	udma_to_device_barrier();
+
+-	hns_roce_write64((uint32_t *)&rq_db, ctx, ROCEE_DB_OTHERS_L_0_REG);
++	hns_roce_write64(ctx->uar + ROCEE_DB_OTHERS_L_0_REG, (__le32 *)&rq_db);
+ }
+
+ static void hns_roce_update_sq_head(struct hns_roce_context *ctx,
+@@ -84,7 +84,7 @@ static void hns_roce_update_sq_head(struct hns_roce_context *ctx,
+
+ 	udma_to_device_barrier();
+
+-	hns_roce_write64((uint32_t *)&sq_db, ctx, ROCEE_DB_SQ_L_0_REG);
++	hns_roce_write64(ctx->uar + ROCEE_DB_SQ_L_0_REG, (__le32 *)&sq_db);
+ }
+
+ static void hns_roce_update_cq_cons_index(struct hns_roce_context *ctx,
+@@ -102,7 +102,7 @@ static void hns_roce_update_cq_cons_index(struct hns_roce_context *ctx,
+ 		       CQ_DB_U32_4_CONS_IDX_S,
+ 		       cq->cons_index & ((cq->cq_depth << 1) - 1));
+
+-	hns_roce_write64((uint32_t *)&cq_db, ctx, ROCEE_DB_OTHERS_L_0_REG);
++	hns_roce_write64(ctx->uar + ROCEE_DB_OTHERS_L_0_REG, (__le32 *)&cq_db);
+ }
+
+ static void hns_roce_handle_error_cqe(struct hns_roce_cqe *cqe,
+@@ -422,10 +422,11 @@ static int hns_roce_u_v1_poll_cq(struct ibv_cq *ibvcq, int ne,
+  */
+ static int hns_roce_u_v1_arm_cq(struct ibv_cq *ibvcq, int solicited)
+ {
+-	uint32_t ci;
+-	uint32_t solicited_flag;
+-	struct hns_roce_cq_db cq_db = {};
++	struct hns_roce_context *ctx = to_hr_ctx(ibvcq->context);
+ 	struct hns_roce_cq *cq = to_hr_cq(ibvcq);
++	struct hns_roce_cq_db cq_db = {};
++	uint32_t solicited_flag;
++	uint32_t ci;
+
+ 	ci = cq->cons_index & ((cq->cq_depth << 1) - 1);
+ 	solicited_flag = solicited ? HNS_ROCE_CQ_DB_REQ_SOL :
+@@ -441,8 +442,8 @@ static int hns_roce_u_v1_arm_cq(struct ibv_cq *ibvcq, int solicited)
+ 	roce_set_field(cq_db.u32_4, CQ_DB_U32_4_CONS_IDX_M,
+ 		       CQ_DB_U32_4_CONS_IDX_S, ci);
+
+-	hns_roce_write64((uint32_t *)&cq_db, to_hr_ctx(ibvcq->context),
+-			  ROCEE_DB_OTHERS_L_0_REG);
++	hns_roce_write64(ctx->uar + ROCEE_DB_OTHERS_L_0_REG, (__le32 *)&cq_db);
++
+ 	return 0;
+ }
+
+diff --git a/providers/hns/hns_roce_u_hw_v2.c b/providers/hns/hns_roce_u_hw_v2.c
+index f947dbd7..efd949f4 100644
+--- a/providers/hns/hns_roce_u_hw_v2.c
++++ b/providers/hns/hns_roce_u_hw_v2.c
+@@ -293,7 +293,7 @@ static void hns_roce_update_rq_db(struct hns_roce_context *ctx,
+ 		       HNS_ROCE_V2_RQ_DB);
+ 	rq_db.parameter = htole32(rq_head);
+
+-	hns_roce_write64((uint32_t *)&rq_db, ctx, ROCEE_VF_DB_CFG0_OFFSET);
++	hns_roce_write64(ctx->uar + ROCEE_VF_DB_CFG0_OFFSET, (__le32 *)&rq_db);
+ }
+
+ static void hns_roce_update_sq_db(struct hns_roce_context *ctx,
+@@ -308,7 +308,7 @@ static void hns_roce_update_sq_db(struct hns_roce_context *ctx,
+ 	sq_db.parameter = htole32(sq_head);
+ 	roce_set_field(sq_db.parameter, DB_PARAM_SL_M, DB_PARAM_SL_S, sl);
+
+-	hns_roce_write64((uint32_t *)&sq_db, ctx, ROCEE_VF_DB_CFG0_OFFSET);
++	hns_roce_write64(ctx->uar + ROCEE_VF_DB_CFG0_OFFSET, (__le32 *)&sq_db);
+ }
+
+ static void hns_roce_v2_update_cq_cons_index(struct hns_roce_context *ctx,
+@@ -325,7 +325,7 @@ static void hns_roce_v2_update_cq_cons_index(struct hns_roce_context *ctx,
+ 	roce_set_field(cq_db.parameter, DB_PARAM_CQ_CMD_SN_M,
+ 		       DB_PARAM_CQ_CMD_SN_S, 1);
+
+-	hns_roce_write64((uint32_t *)&cq_db, ctx, ROCEE_VF_DB_CFG0_OFFSET);
++	hns_roce_write64(ctx->uar + ROCEE_VF_DB_CFG0_OFFSET, (__le32 *)&cq_db);
+ }
+
+ static struct hns_roce_qp *hns_roce_v2_find_qp(struct hns_roce_context *ctx,
+@@ -659,11 +659,12 @@ static int hns_roce_u_v2_poll_cq(struct ibv_cq *ibvcq, int ne,
+
+ static int hns_roce_u_v2_arm_cq(struct ibv_cq *ibvcq, int solicited)
+ {
+-	uint32_t ci;
+-	uint32_t cmd_sn;
+-	uint32_t solicited_flag;
+-	struct hns_roce_db cq_db = {};
++	struct hns_roce_context *ctx = to_hr_ctx(ibvcq->context);
+ 	struct hns_roce_cq *cq = to_hr_cq(ibvcq);
++	struct hns_roce_db cq_db = {};
++	uint32_t solicited_flag;
++	uint32_t cmd_sn;
++	uint32_t ci;
+
+ 	ci = cq->cons_index & ((cq->cq_depth << 1) - 1);
+ 	cmd_sn = cq->arm_sn & HNS_ROCE_CMDSN_MASK;
+@@ -681,8 +682,8 @@ static int hns_roce_u_v2_arm_cq(struct ibv_cq *ibvcq, int solicited)
+ 		       DB_PARAM_CQ_CMD_SN_S, cmd_sn);
+ 	roce_set_bit(cq_db.parameter, DB_PARAM_CQ_NOTIFY_S, solicited_flag);
+
+-	hns_roce_write64((uint32_t *)&cq_db, to_hr_ctx(ibvcq->context),
+-			  ROCEE_VF_DB_CFG0_OFFSET);
++	hns_roce_write64(ctx->uar + ROCEE_VF_DB_CFG0_OFFSET, (__le32 *)&cq_db);
++
+ 	return 0;
+ }
+
+@@ -1620,8 +1621,8 @@ static int hns_roce_u_v2_post_srq_recv(struct ibv_srq *ib_srq,
+ 		srq_db.parameter = htole32(srq->idx_que.head &
+ 					   DB_PARAM_SRQ_PRODUCER_COUNTER_M);
+
+-		hns_roce_write64((uint32_t *)&srq_db, ctx,
+-				 ROCEE_VF_DB_CFG0_OFFSET);
++		hns_roce_write64(ctx->uar + ROCEE_VF_DB_CFG0_OFFSET,
++				 (__le32 *)&srq_db);
+ 	}
+
+ 	pthread_spin_unlock(&srq->lock);
+--
+2.33.0
+
