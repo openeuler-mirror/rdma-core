@@ -1,6 +1,6 @@
 Name:           rdma-core
 Version:        35.1
-Release:        2
+Release:        3
 Summary:        RDMA core userspace libraries and daemons
 License:        GPLv2 or BSD
 Url:            https://github.com/linux-rdma/rdma-core
@@ -15,6 +15,7 @@ Patch5:         0005-libhns-Avoid-using-WQE-indexes-that-exceed-the-SRQ-s.patch
 Patch6:         0006-libhns-Don-t-create-RQ-for-a-QP-that-associated-with.patch
 Patch7:         0007-libhns-Add-support-for-direct-wqe.patch
 Patch8:         0008-libhns-Use-new-SQ-doorbell-register-for-HIP09.patch
+Patch9:         riscv-barriers.patch
 
 BuildRequires:  binutils cmake >= 2.8.11 gcc libudev-devel pkgconfig pkgconfig(libnl-3.0)
 BuildRequires:  pkgconfig(libnl-route-3.0) valgrind-devel systemd systemd-devel
@@ -259,6 +260,12 @@ fi
 %{_mandir}/*
 
 %changelog
+* Thu Apr 21 2022 lvxiaoqian <xiaoqian@nj.iscas.ac.cn> - 35.1-3
+- Type: requirement
+- ID: NA
+- SUG: NA
+- DESC: add riscv patch, patch url:http://fedora.riscv.rocks/koji/buildinfo?buildID=87543
+
 * Thu Jan 10 2022 tangchengchang <tangchengchang@huawei.com> - 35.1-2
 - Type: requirement
 - ID: NA
